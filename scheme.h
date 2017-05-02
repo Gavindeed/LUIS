@@ -4,10 +4,9 @@
 #include "BloomFilter.h"
 #include "CMSketch.h"
 #include "CUSketch.h"
-#include "MemberSketch.h"
-#include "FingerSketch.h"
 #include "CoveringSketch.h"
-#include "HashTable.h"
+#include "GCRCoveringSketch.h"
+#include "CRCoveringSketch.h"
 
 class BuffaloScheme
 {
@@ -44,7 +43,7 @@ struct Bound
 class BasicScheme
 {
 public:
-	BasicScheme(int num, int sketchType, int d, int w, int b, uint *encode);
+	BasicScheme(int num, int sketchType, int d, int w, int b);
 	void Insert(cuc *str, uint type);
 	Bound Query(cuc *str);
 	uint GetMemory()
@@ -55,16 +54,14 @@ public:
 private:
 	int numType;
 	Sketch *sketchPos, *sketchNeg;
-	uint *codeList;
 };
 
-class OptimizedScheme
+class GCROptimizedScheme
 {
 public:
-	OptimizedScheme(int num, int d, int w, int b, int f);
+	GCROptimizedScheme(int num, int d, int w, int b);
 	void Insert(cuc *str, uint type);
 	int Query(cuc *str);
-	void Insert2(cuc *str, uint type);
 	
 	uint GetMemory()
 	{
@@ -85,7 +82,37 @@ private:
 		return -1;
 	}
 	int numType;
-	CoveringSketch *sketchPos, *sketchNeg; 
+	GCRCoveringSketch *sketchPos, *sketchNeg; 
+	HashFunction *hash;
+};
+
+class CROptimizedScheme
+{
+public:
+	CROptimizedScheme(int num, int d, int w, int b, int f);
+	void Insert(cuc *str, uint type);
+	int Query(cuc *str);
+	
+	uint GetMemory()
+	{
+		return sketchPos->GetMemory() + sketchNeg->GetMemory();
+	}
+	
+	
+private:
+	int FindMS(uint number)
+	{
+		for(int i = 31; i >= 0; i--)
+		{
+			if(((number >> i) & 1) == 1)
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+	int numType;
+	CRCoveringSketch *sketchPos, *sketchNeg; 
 	int f;
 	HashFunction *hash;
 };

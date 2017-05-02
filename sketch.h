@@ -5,7 +5,6 @@ class Sketch
 {
 public:
 	virtual void Insert(cuc *str, uint num) = 0;
-	virtual void Remove(cuc *str, uint num) = 0;
 	virtual uint Query(cuc *str) = 0;
 	Sketch() {memoryAccess = 0;}
 	uint GetMemory() {return memoryAccess;}

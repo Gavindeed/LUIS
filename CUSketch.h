@@ -9,7 +9,6 @@ class CUSketch : public Sketch
 public:
 	CUSketch(int d, int w, int b);
 	void Insert(cuc *str, uint num);
-	void Remove(cuc *str, uint num);
 	uint Query(cuc *str);
 	
 private:

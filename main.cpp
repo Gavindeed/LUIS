@@ -178,14 +178,9 @@ void BuffaloTest(int numType)
 
 void BasicTest(int numType, int sketchType, int d)
 {
-	uint *encode = new uint[numType];
-	for(int i = 0; i < numType; i++)
-	{
-		encode[i] = i+1;
-	}
 	int bits = 0;
 	bits = FindMS(numType) + 1;
-	BasicScheme *scheme = new BasicScheme(numType, sketchType, d, sumBits/2/d/bits+3, bits, encode);
+	BasicScheme *scheme = new BasicScheme(numType, sketchType, d, sumBits/2/d/bits+3, bits);
 	char buf[1024];
 	dict.clear();
 	uint sum = 0;
@@ -194,9 +189,9 @@ void BasicTest(int numType, int sketchType, int d)
 	while(GetItem(buf, &type))
 	{
 		string t = buf;
-		dict.insert(make_pair(t, type));
+		dict.insert(make_pair(t, type+1));
 		sum ++;
-		scheme->Insert((cuc*)buf, type);
+		scheme->Insert((cuc*)buf, type+1);
 	}
 	time_t end1 = clock();
 	uint mem1 = scheme->GetMemory();
@@ -243,7 +238,7 @@ void BasicTest(int numType, int sketchType, int d)
 void CRTest(int numType, int f, int d)
 {
 	int bits = FindMS(numType) + 1;
-	OptimizedScheme *scheme = new OptimizedScheme(numType, d, sumBits/d/2/(bits+f+1)+1, bits, f);
+	CROptimizedScheme *scheme = new CROptimizedScheme(numType, d, sumBits/d/2/(bits+f+1)+1, bits, f);
 	char buf[1024];
 	dict.clear();
 	uint sum = 0;
@@ -304,10 +299,10 @@ void CRTest(int numType, int f, int d)
 		printf(",%lf", log((mem2-mem1)/(double)items[dataId])/log(2));
 }
 
-void GCRTest(int numType, int f, int d)
+void GCRTest(int numType, int d)
 {
 	int bits = FindMS(numType) + 1;
-	OptimizedScheme *scheme = new OptimizedScheme(numType, d, sumBits/d/2/(bits+1)+1, bits, f);
+	GCROptimizedScheme *scheme = new GCROptimizedScheme(numType, d, sumBits/d/2/(bits+1)+1, bits);
 	char buf[1024];
 	dict.clear();
 	uint sum = 0;
@@ -370,18 +365,19 @@ void GCRTest(int numType, int f, int d)
 
 int main(int argc, char **argv)
 {
-	dataId = atoi(argv[8]);
-	OpenData(dataname[dataId]);
-	flows = items[dataId];
-	keyLength = 32 * 8;
 	numType = atoi(argv[1]);
 	numType = (1 << numType) - 1;
 	int basic = atoi(argv[2]);
-	sumBits = flows * basic * 8;
 	int codeLength = atoi(argv[3]);
 	int sketchType = atoi(argv[4]);
 	int mode = atoi(argv[5]);
 	output = atoi(argv[7]); 
+	dataId = atoi(argv[8]);
+
+	OpenData(dataname[dataId]);
+	flows = items[dataId];
+	keyLength = 32 * 8;	
+	sumBits = flows * basic * 8;
 	int d = 2;
 	switch(mode)
 	{
@@ -407,10 +403,7 @@ int main(int argc, char **argv)
 		BasicTest(numType, sketchType, d);
 		break;
 	case 6:
-		keyLength = 32 * 8;
-		sumBits = flows;
-		sumBits *= (keyLength + FindMS(numType) + 1);
-		sumBits *= basic / 100.0;
+		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
 		d = atoi(argv[6]);
 		CRTest(numType, codeLength, d);
 		break;
@@ -423,18 +416,15 @@ int main(int argc, char **argv)
 		CRTest(numType, codeLength, d);
 		break;
 	case 10:
-		GCRTest(numType, codeLength, d);
+		GCRTest(numType, d);
 		break;
 	case 11:
-		keyLength = 32 * 8;
-		sumBits = flows;
-		sumBits *= (keyLength + FindMS(numType) + 1);
-		sumBits *= basic / 100.0;
-		GCRTest(numType, codeLength, d);
+		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
+		GCRTest(numType, d);
 		break;
 	case 12:
 		sumBits = flows * atoi(argv[1]) * 4;
-		GCRTest(numType, codeLength, d);
+		GCRTest(numType, d);
 		break;
 	default:
 		printf("mode error!\n");

@@ -33,7 +33,7 @@ uint BuffaloScheme::Query(cuc *str)
 	return -1;
 }
 
-BasicScheme::BasicScheme(int num, int sketchType, int d, int w, int b, uint *encode)
+BasicScheme::BasicScheme(int num, int sketchType, int d, int w, int b)
 {
 	numType = num;
 	if(sketchType == 0)
@@ -48,20 +48,15 @@ BasicScheme::BasicScheme(int num, int sketchType, int d, int w, int b, uint *enc
 	}
 	else
 	{
-		sketchPos = new MemberSketch(d, w+1, b);
-		sketchNeg = new MemberSketch(d, w, b);
-	}
-	codeList = new uint[num];
-	for(int i = 0; i < num; i++)
-	{
-		codeList[i] = encode[i];
+		sketchPos = new CoveringSketch(d, w+1, b);
+		sketchNeg = new CoveringSketch(d, w, b);
 	}
 }
 
 void BasicScheme::Insert(cuc *str, uint type)
 {
-	sketchPos->Insert(str, codeList[type]);
-	sketchNeg->Insert(str, codeList[numType-1-type]);
+	sketchPos->Insert(str, type);
+	sketchNeg->Insert(str, numType-type);
 }
 
 Bound BasicScheme::Query(cuc *str)
@@ -71,101 +66,73 @@ Bound BasicScheme::Query(cuc *str)
 	{
 		return Bound(-1, -1);
 	}
-	uint up = 0;
-	int left = 0, right = numType - 1;
-	int mid = right / 2;
-	while(left < right)
-	{
-		if(codeList[mid] < resP)
-		{
-			left = mid + 1;
-			mid = (left + right) / 2;
-		}
-		else
-		{
-			right = mid;
-			mid = (left + right) / 2;
-		}
-	}
-	if(left != right)
-	{
-		printf("error!\n");
-		exit(0);
-	}
-	if(left + 1 < numType && codeList[left+1] <= resP)
-	{
-		up = left + 1;
-	}
-	else if(codeList[left] > resP)
-	{
-		up = left - 1;
-	}
-	else
-	{
-		up = left;
-	}
 	uint resN = sketchNeg->Query(str);
 	if(resN == 0)
 	{
 		return Bound(-1, -1);
 	}
-	uint down = numType - 1;
-	left = 0, right = numType - 1;
-	mid = right / 2;
-	while(left < right)
-	{
-		if(codeList[mid] < resN)
-		{
-			left = mid + 1;
-			mid = (left + right) / 2;
-		}
-		else
-		{
-			right = mid;
-			mid = (left + right) / 2;
-		}
-	}
-	if(left != right)
-	{
-		printf("error!\n");
-		exit(0);
-	}
-	if(left + 1 < numType && codeList[left+1] <= resN)
-	{
-		down = numType - left - 2;
-	}
-	else if(codeList[left] > resN)
-	{
-		down = numType - left;
-	}
-	else
-	{
-		down = numType - 1 - left;
-	}
-	if(up < down)
-	{
-		return Bound(-1, -1);
-	}
-	return Bound(up, down);
+	resN = numType - resN;
+	return Bound(resP, resN);
 }
 
-OptimizedScheme::OptimizedScheme(int num, int d, int w, int b, int f)
+
+GCROptimizedScheme::GCROptimizedScheme(int num, int d, int w, int b)
 {
 	numType = num;
-	int ratio = 1; 
-	sketchPos = new CoveringSketch(d, w*2/(ratio+1), b, f);
-	sketchNeg = new CoveringSketch(d, w*2*ratio/(ratio+1)+1, b, f);
+	sketchPos = new GCRCoveringSketch(d, w, b);
+	sketchNeg = new GCRCoveringSketch(d, w+1, b);
+	hash = new HashFunction();
+}
+
+void GCROptimizedScheme::Insert(cuc *str, uint type)
+{
+	sketchPos->Insert(str, type);
+	sketchNeg->Insert(str, numType-type);
+}
+
+int GCROptimizedScheme::Query(cuc *str)
+{
+	int p = sketchPos->Query(str);
+	int n = sketchNeg->Query(str); 
+	uint vp = abs(p);
+	uint vn = abs(n); 
+	vn = numType - vn; 
+	if(vp == vn)
+	{
+		return vp; 
+	}
+	if(p > 0)
+	{
+		return vp;
+	}
+	if(n > 0)
+	{
+		return vn;
+	}
+	if(p == 0 || n == 0 || vp < vn)
+	{
+		return 0;
+	}
+	
+	return -numType;
+}
+
+CROptimizedScheme::CROptimizedScheme(int num, int d, int w, int b, int f)
+{
+	numType = num;
+	sketchPos = new CRCoveringSketch(d, w, b, f);
+	sketchNeg = new CRCoveringSketch(d, w+1, b, f);
 	this->f = f;
 	hash = new HashFunction();
 }
 
-void OptimizedScheme::Insert(cuc *str, uint type)
+void CROptimizedScheme::Insert(cuc *str, uint type)
 {
 	bool ok = sketchPos->Insert(str, type);
 	sketchNeg->Insert(str, numType-type);
 }
 
-int OptimizedScheme::Query(cuc *str)
+int CROptimizedScheme::Query(cuc *str)
 {
 	int p = sketchPos->Query(str);
 	int n = sketchNeg->Query(str); 

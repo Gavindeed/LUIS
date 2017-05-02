@@ -34,7 +34,6 @@ void CUSketch::Insert(cuc *str, uint num)
 	for(int i = 0; i < depth; i++)
 	{
 		int index = hash->Str2Int(str, i, strlen((const char*)str)) % width;
-		//memoryAccess ++;
 		if(sketch[i][index] < final)
 		{
 			sketch[i][index] = final;
@@ -55,9 +54,4 @@ uint CUSketch::Query(cuc *str)
 		}
 	}
 	return MIN;
-}
-
-void CUSketch::Remove(cuc *str, uint num)
-{
-	
 }
