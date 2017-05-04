@@ -16,7 +16,7 @@ Key-value (KV) store plays an important role in high-performance data-intensive 
 	* select the metric to be measured
 	* read the data, let the schema work on it, record the real value for each key, and measure the metric
 * XXXSketch.h and XXXSketch.cpp: The codes of each kind of sketches.
-* schema.h and schema.cpp: The codes of LUIS<sub>B</sub>, LUIS<sub>G</sub>, LUIS<sub>C</sub>, and Buffalo, where LUIS<sub>G</sub> and LUIS<sub>C</sub> are able to share the same scheme (just by only focusing on the guaranteed correct cases, we can treat LUIS<sub>C</sub> as LUIS<sub>G</sub>).
+* schema.h and schema.cpp: The codes of LUIS<sub>B</sub>, LUIS<sub>G</sub>, LUIS<sub>C</sub>, and Buffalo.
 * BloomFilter.h and BloomFilter.cpp: The codes of Bloom filters used by Buffalo.
 * common.h and common.cpp: The codes of hash functions and other trivial things.
 
