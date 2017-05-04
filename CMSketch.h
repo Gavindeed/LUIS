@@ -1,3 +1,7 @@
+/*
+* This file contains the codes of the CM sketch
+*/
+
 #ifndef _CMSKETCH_H
 #define _CMSKETCH_H
 

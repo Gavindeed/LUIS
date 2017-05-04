@@ -1,3 +1,7 @@
+/*
+* This file contains the codes of Bloom filters
+*/
+
 #ifndef _BLOOMFILTER_H
 #define _BLOOMFILTER_H
 

@@ -1,3 +1,7 @@
+/*
+* This file contains the codes of the Covering sketch
+*/
+
 #ifndef _COVERINGSKETCH_H
 #define _COVERINGSKETCH_H
 

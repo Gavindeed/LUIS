@@ -1,3 +1,7 @@
+/*
+* This file contains the codes of the Covering sketch used in CR-oriented version
+*/
+
 #ifndef _CRCOVERINGSKETCH_H
 #define _CRCOVERINGSKETCH_H
 

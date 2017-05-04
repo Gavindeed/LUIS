@@ -50,6 +50,11 @@ bool GCRCoveringSketch::Insert(cuc *str, uint num)
 	return ok;
 }
 
+/*
+* Note: we use the sign bit of signed integer to serve as the flag bit
+* Therefore, if the return value is larger than 0, it can be guaranteed to be correct
+* Otherwise, it cannot be guaranteed
+*/
 uint GCRCoveringSketch::Query(cuc *str)
 {
 	uint MIN = MAXV+1;

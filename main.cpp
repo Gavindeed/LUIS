@@ -1,4 +1,14 @@
-#include "scheme.h"
+/*
+* This file contains the main function.
+* It does the following works:
+* 1) read the parameters from the console
+* 2) select the data source based on the parameter
+* 3) select the schema based on the parameter
+* 4) select the metric to be measured
+* 5) read the data, let the schema work on it, record the real value for each key, and measure the metric
+*/
+
+#include "schema.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <map>
@@ -19,9 +29,11 @@ int dataId;
 double keyLength;
 FILE *file;
 
-const char *dataname[5] = {"./data/gudid.dat", "./data/trans.dat", "./data/images.dat", "./data/d1"};
+/* There are 4 data sources, and each data source has different number of KV pairs */
+const char *dataname[4] = {"./data/gudid.dat", "./data/trans.dat", "./data/images.dat", "./data/d1"};
 int items[4] = {1349853, 1056320, 269613, 1078658};
 
+/* Select the data source */
 void OpenData(const char *filename)
 {
 	if(dataId == 0)
@@ -42,6 +54,7 @@ void OpenData(const char *filename)
 	}
 }
 
+/* Functions GetItem0 ~ GetItem3 are used to read data, each call of these functions can read one single KV pair */
 bool GetItem0(char *buf, int *type)
 {
 	if(fscanf(file, "%s", buf) > 0)
@@ -132,10 +145,11 @@ int FindMS(uint number)
 	return -1;
 }
 
+/* Test the Buffalo */
 void BuffaloTest(int numType)
 {
 	int k = sumBits / (double)flows * log(2) + 0.5;
-	BuffaloScheme *scheme = new BuffaloScheme(numType, sumBits/numType, 4);
+	BuffaloSchema *Schema = new BuffaloSchema(numType, sumBits/numType, 4);
 	char buf[1024];
 	dict.clear();
 	uint sum = 0;
@@ -146,16 +160,16 @@ void BuffaloTest(int numType)
 		string t = buf;
 		dict.insert(make_pair(t, type));
 		sum ++;
-		scheme->Insert((cuc*)buf, type);
+		Schema->Insert((cuc*)buf, type);
 	}
 	time_t end1 = clock();
-	uint mem1 = scheme->GetMemory();
+	uint mem1 = Schema->GetMemory();
 	map<string, uint>::iterator it;
 	uint error = 0;
 	time_t start2 = clock();
 	for(it = dict.begin(); it != dict.end(); it ++)
 	{
-		uint esti = scheme->Query((cuc*)(it->first).c_str());
+		uint esti = Schema->Query((cuc*)(it->first).c_str());
 		uint real = it->second;
 		if(real != esti) 
 		{
@@ -163,7 +177,7 @@ void BuffaloTest(int numType)
 		}
 	}
 	time_t end2 = clock();
-	uint mem2 = scheme->GetMemory();
+	uint mem2 = Schema->GetMemory();
 	if(output == 2)
 		printf(",%lf", 1 - error / (double)sum);
 	else if(output == 4)
@@ -176,11 +190,12 @@ void BuffaloTest(int numType)
 		printf(",%lf", log((mem2-mem1)/(double)items[dataId])/log(2));
 }
 
+/* Test LUIS_B */
 void BasicTest(int numType, int sketchType, int d)
 {
 	int bits = 0;
 	bits = FindMS(numType) + 1;
-	BasicScheme *scheme = new BasicScheme(numType, sketchType, d, sumBits/2/d/bits+3, bits);
+	BasicSchema *Schema = new BasicSchema(numType, sketchType, d, sumBits/2/d/bits+3, bits);
 	char buf[1024];
 	dict.clear();
 	uint sum = 0;
@@ -191,10 +206,10 @@ void BasicTest(int numType, int sketchType, int d)
 		string t = buf;
 		dict.insert(make_pair(t, type+1));
 		sum ++;
-		scheme->Insert((cuc*)buf, type+1);
+		Schema->Insert((cuc*)buf, type+1);
 	}
 	time_t end1 = clock();
-	uint mem1 = scheme->GetMemory();
+	uint mem1 = Schema->GetMemory();
 	map<string, uint>::iterator it;
 	uint error = 0;
 	uint full = 0;
@@ -202,7 +217,7 @@ void BasicTest(int numType, int sketchType, int d)
 	time_t start2 = clock();
 	for(it = dict.begin(); it != dict.end(); it ++)
 	{
-		Bound esti = scheme->Query((cuc*)(it->first).c_str());
+		Bound esti = Schema->Query((cuc*)(it->first).c_str());
 		uint real = it->second;
 		if(real > esti.up || real < esti.down) 
 		{
@@ -218,7 +233,7 @@ void BasicTest(int numType, int sketchType, int d)
 		}
 	}
 	time_t end2 = clock();
-	uint mem2 = scheme->GetMemory();
+	uint mem2 = Schema->GetMemory();
 	if(output == 0)
 		printf(",%lf", full / (double)sum);
 	else if(output == 1)
@@ -235,10 +250,11 @@ void BasicTest(int numType, int sketchType, int d)
 		printf(",%lf", log((mem2-mem1)/(double)items[dataId])/log(2));
 }
 
-void CRTest(int numType, int f, int d)
+/* Test LUIS_G */
+void GCRTest(int numType, int d)
 {
 	int bits = FindMS(numType) + 1;
-	CROptimizedScheme *scheme = new CROptimizedScheme(numType, d, sumBits/d/2/(bits+f+1)+1, bits, f);
+	GCROptimizedSchema *Schema = new GCROptimizedSchema(numType, d, sumBits/d/2/(bits+1)+1, bits);
 	char buf[1024];
 	dict.clear();
 	uint sum = 0;
@@ -249,10 +265,10 @@ void CRTest(int numType, int f, int d)
 		string t = buf;
 		dict.insert(make_pair(t, type+1));
 		sum ++;
-		scheme->Insert((cuc*)buf, type+1);
+		Schema->Insert((cuc*)buf, type+1);
 	}
 	time_t end1 = clock();
-	uint mem1 = scheme->GetMemory();
+	uint mem1 = Schema->GetMemory();
 	map<string, uint>::iterator it;
 	uint error = 0;
 	uint nonsense = 0;
@@ -261,7 +277,7 @@ void CRTest(int numType, int f, int d)
 	time_t start2 = clock();
 	for(it = dict.begin(); it != dict.end(); it ++)
 	{
-		int estiV = scheme->Query((cuc*)(it->first).c_str());
+		int estiV = Schema->Query((cuc*)(it->first).c_str());
 		uint real = it->second; 
 		uint esti = abs(estiV);
 		if(estiV > 0)
@@ -282,77 +298,78 @@ void CRTest(int numType, int f, int d)
 		}
 	}
 	time_t end2 = clock();
-	uint mem2 = scheme->GetMemory();
+	uint mem2 = Schema->GetMemory();
+	if(output == 0)
+		printf(",%lf", full / (double)sum);
+	else if(output == 1)
+		printf(",%lf", half / (double)sum);
+	else if(output == 2)
+		printf(",%lf", (full + half / 2) / (double)sum);
+	else if(output == 4)
+		printf(",%lf", log(mem1/(double)items[dataId])/log(2));
+	else if(output == 5)
+		printf(",%lf", items[dataId] * (double)CLOCKS_PER_SEC / (end2 - start2));
+	else if(output == 6)
+		printf(",%lf", items[dataId] * (double)CLOCKS_PER_SEC / (end1 - start1));
+	else if(output == 7)
+		printf(",%lf", log((mem2-mem1)/(double)items[dataId])/log(2));
+}
+
+/* Test LUIS_C */
+void CRTest(int numType, int f, int d)
+{
+	int bits = FindMS(numType) + 1;
+	CROptimizedSchema *Schema = new CROptimizedSchema(numType, d, sumBits/d/2/(bits+f+1)+1, bits, f);
+	char buf[1024];
+	dict.clear();
+	uint sum = 0;
+	int type;
+	time_t start1 = clock();
+	while(GetItem(buf, &type))
+	{
+		string t = buf;
+		dict.insert(make_pair(t, type+1));
+		sum ++;
+		Schema->Insert((cuc*)buf, type+1);
+	}
+	time_t end1 = clock();
+	uint mem1 = Schema->GetMemory();
+	map<string, uint>::iterator it;
+	uint error = 0;
+	uint nonsense = 0;
+	uint full = 0;
+	uint half = 0;
+	time_t start2 = clock();
+	for(it = dict.begin(); it != dict.end(); it ++)
+	{
+		int estiV = Schema->Query((cuc*)(it->first).c_str());
+		uint real = it->second; 
+		uint esti = abs(estiV);
+		if(estiV > 0)
+		{
+			full ++;
+		}
+		else if(esti != numType)
+		{
+			half ++;
+		}
+		if(esti != real)
+		{
+			error ++;
+		}
+		if(esti == numType)
+		{
+			nonsense ++;
+		}
+	}
+	time_t end2 = clock();
+	uint mem2 = Schema->GetMemory();
 	if(output == 0)
 		printf(",%lf", full / (double)sum);
 	else if(output == 1)
 		printf(",%lf", half / (double)sum);
 	else if(output == 2)
 		printf(",%lf", 1 - error / (double)sum);
-	else if(output == 4)
-		printf(",%lf", log(mem1/(double)items[dataId])/log(2));
-	else if(output == 5)
-		printf(",%lf", items[dataId] * (double)CLOCKS_PER_SEC / (end2 - start2));
-	else if(output == 6)
-		printf(",%lf", items[dataId] * (double)CLOCKS_PER_SEC / (end1 - start1));
-	else if(output == 7)
-		printf(",%lf", log((mem2-mem1)/(double)items[dataId])/log(2));
-}
-
-void GCRTest(int numType, int d)
-{
-	int bits = FindMS(numType) + 1;
-	GCROptimizedScheme *scheme = new GCROptimizedScheme(numType, d, sumBits/d/2/(bits+1)+1, bits);
-	char buf[1024];
-	dict.clear();
-	uint sum = 0;
-	int type;
-	time_t start1 = clock();
-	while(GetItem(buf, &type))
-	{
-		string t = buf;
-		dict.insert(make_pair(t, type+1));
-		sum ++;
-		scheme->Insert((cuc*)buf, type+1);
-	}
-	time_t end1 = clock();
-	uint mem1 = scheme->GetMemory();
-	map<string, uint>::iterator it;
-	uint error = 0;
-	uint nonsense = 0;
-	uint full = 0;
-	uint half = 0;
-	time_t start2 = clock();
-	for(it = dict.begin(); it != dict.end(); it ++)
-	{
-		int estiV = scheme->Query((cuc*)(it->first).c_str());
-		uint real = it->second; 
-		uint esti = abs(estiV);
-		if(estiV > 0)
-		{
-			full ++;
-		}
-		else if(esti != numType)
-		{
-			half ++;
-		}
-		if(esti != real)
-		{
-			error ++;
-		}
-		if(esti == numType)
-		{
-			nonsense ++;
-		}
-	}
-	time_t end2 = clock();
-	uint mem2 = scheme->GetMemory();
-	if(output == 0)
-		printf(",%lf", full / (double)sum);
-	else if(output == 1)
-		printf(",%lf", half / (double)sum);
-	else if(output == 2)
-		printf(",%lf", (full + half / 2) / (double)sum);
 	else if(output == 4)
 		printf(",%lf", log(mem1/(double)items[dataId])/log(2));
 	else if(output == 5)

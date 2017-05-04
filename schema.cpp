@@ -1,4 +1,4 @@
-#include "scheme.h"
+#include "schema.h"
 #include <algorithm>
 #include <stdio.h>
 #include <string.h>
@@ -6,7 +6,7 @@
 
 using namespace std;
 
-BuffaloScheme::BuffaloScheme(int num, int w, int k)
+BuffaloSchema::BuffaloSchema(int num, int w, int k)
 {
 	numType = num;
 	filters = new BloomFilter*[num];
@@ -16,12 +16,12 @@ BuffaloScheme::BuffaloScheme(int num, int w, int k)
 	}
 }
 
-void BuffaloScheme::Insert(cuc *str, uint type)
+void BuffaloSchema::Insert(cuc *str, uint type)
 {
 	filters[type]->Insert(str);
 }
 
-uint BuffaloScheme::Query(cuc *str)
+uint BuffaloSchema::Query(cuc *str)
 {
 	for(int i = numType-1; i >= 0; i--)
 	{
@@ -33,7 +33,7 @@ uint BuffaloScheme::Query(cuc *str)
 	return -1;
 }
 
-BasicScheme::BasicScheme(int num, int sketchType, int d, int w, int b)
+BasicSchema::BasicSchema(int num, int sketchType, int d, int w, int b)
 {
 	numType = num;
 	if(sketchType == 0)
@@ -53,13 +53,13 @@ BasicScheme::BasicScheme(int num, int sketchType, int d, int w, int b)
 	}
 }
 
-void BasicScheme::Insert(cuc *str, uint type)
+void BasicSchema::Insert(cuc *str, uint type)
 {
 	sketchPos->Insert(str, type);
 	sketchNeg->Insert(str, numType-type);
 }
 
-Bound BasicScheme::Query(cuc *str)
+Bound BasicSchema::Query(cuc *str)
 {
 	uint resP = sketchPos->Query(str);
 	if(resP == 0)
@@ -76,7 +76,7 @@ Bound BasicScheme::Query(cuc *str)
 }
 
 
-GCROptimizedScheme::GCROptimizedScheme(int num, int d, int w, int b)
+GCROptimizedSchema::GCROptimizedSchema(int num, int d, int w, int b)
 {
 	numType = num;
 	sketchPos = new GCRCoveringSketch(d, w, b);
@@ -84,13 +84,13 @@ GCROptimizedScheme::GCROptimizedScheme(int num, int d, int w, int b)
 	hash = new HashFunction();
 }
 
-void GCROptimizedScheme::Insert(cuc *str, uint type)
+void GCROptimizedSchema::Insert(cuc *str, uint type)
 {
 	sketchPos->Insert(str, type);
 	sketchNeg->Insert(str, numType-type);
 }
 
-int GCROptimizedScheme::Query(cuc *str)
+int GCROptimizedSchema::Query(cuc *str)
 {
 	int p = sketchPos->Query(str);
 	int n = sketchNeg->Query(str); 
@@ -117,7 +117,7 @@ int GCROptimizedScheme::Query(cuc *str)
 	return -numType;
 }
 
-CROptimizedScheme::CROptimizedScheme(int num, int d, int w, int b, int f)
+CROptimizedSchema::CROptimizedSchema(int num, int d, int w, int b, int f)
 {
 	numType = num;
 	sketchPos = new CRCoveringSketch(d, w, b, f);
@@ -126,13 +126,18 @@ CROptimizedScheme::CROptimizedScheme(int num, int d, int w, int b, int f)
 	hash = new HashFunction();
 }
 
-void CROptimizedScheme::Insert(cuc *str, uint type)
+void CROptimizedSchema::Insert(cuc *str, uint type)
 {
 	bool ok = sketchPos->Insert(str, type);
 	sketchNeg->Insert(str, numType-type);
 }
 
-int CROptimizedScheme::Query(cuc *str)
+/* 
+* Note: we use the sign bit of signed integer to serve as the flag bit
+* Therefore, if the return value is larger than 0, it is guaranteed to be correct
+* Otherwise, the return value is a "confident" value
+*/
+int CROptimizedSchema::Query(cuc *str)
 {
 	int p = sketchPos->Query(str);
 	int n = sketchNeg->Query(str); 

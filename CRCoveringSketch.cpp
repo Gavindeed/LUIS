@@ -22,6 +22,12 @@ CRCoveringSketch::CRCoveringSketch(int d, int w, int b, int f)
 	memoryAccess = 0;
 }
 
+/*
+* Note: We use the sign bit of signed integer to serve as the flag bit,
+* and let one integer to contain the value and the fingerprint,
+* where the fingerprint locates in the lower bits, and the value locates in the higher bits.
+* "[value|fingerprint]"
+*/
 bool CRCoveringSketch::Insert(cuc *str, uint num)
 {
 	bool ok = false;
@@ -56,6 +62,7 @@ bool CRCoveringSketch::Insert(cuc *str, uint num)
 	return ok;
 }
 
+/* Note: if the return value is larger than 0, it can be guaranteed to be correct */
 uint CRCoveringSketch::Query(cuc *str)
 {
 	uint MIN = MAXV+1;

@@ -1,3 +1,7 @@
+/*
+* This file contains the codes of the CU sketch
+*/
+
 #ifndef _CUSKETCH_H
 #define _CUSKETCH_H
 

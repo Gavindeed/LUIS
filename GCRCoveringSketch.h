@@ -1,3 +1,7 @@
+/*
+* This file contains the codes of the Covering sketch used in GCR-oriented version
+*/
+
 #ifndef _GCRCOVERINGSKETCH_H
 #define _GCRCOVERINGSKETCH_H
 
