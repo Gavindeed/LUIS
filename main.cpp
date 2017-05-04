@@ -94,6 +94,7 @@ bool GetItem2(char *buf, int *type)
 	}
 } 
 
+/* Note: this function also serves as generating the uniform-distributed dataset */
 bool GetItem3(char *buf, int *type)
 {
 	static HashFunction *hash = new HashFunction();
@@ -385,7 +386,7 @@ int main(int argc, char **argv)
 	numType = atoi(argv[1]);
 	numType = (1 << numType) - 1;
 	int basic = atoi(argv[2]);
-	int codeLength = atoi(argv[3]);
+	int fingerLength = atoi(argv[3]);
 	int sketchType = atoi(argv[4]);
 	int mode = atoi(argv[5]);
 	output = atoi(argv[7]); 
@@ -402,42 +403,46 @@ int main(int argc, char **argv)
 		BasicTest(numType, sketchType, d);
 		break;
 	case 1:
-		CRTest(numType, codeLength, d);
+		CRTest(numType, fingerLength, d);
 		break;
 	case 2:
-		BuffaloTest(numType);
+		GCRTest(numType, d);
 		break;
 	case 3:
-		d = atoi(argv[6]);
-		BasicTest(numType, sketchType, d);
+		BuffaloTest(numType);
 		break;
 	case 4:
 		d = atoi(argv[6]);
-		CRTest(numType, codeLength, d);
+		BasicTest(numType, sketchType, d);
 		break;
 	case 5:
-		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
-		BasicTest(numType, sketchType, d);
+		d = atoi(argv[6]);
+		CRTest(numType, fingerLength, d);
 		break;
 	case 6:
-		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
 		d = atoi(argv[6]);
-		CRTest(numType, codeLength, d);
+		GCRTest(numType, d);
+		break;
+	case 7:
+		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
+		BasicTest(numType, sketchType, d);
 		break;
 	case 8:
+		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
+		d = atoi(argv[6]);
+		CRTest(numType, fingerLength, d);
+		break;
+	case 9:
+		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
+		GCRTest(numType, d);
+		break;
+	case 10:
 		sumBits = flows * atoi(argv[1]) * 4;
 		BasicTest(numType, sketchType, d);
 		break;
-	case 9:
-		sumBits = flows * atoi(argv[1]) * 4;
-		CRTest(numType, codeLength, d);
-		break;
-	case 10:
-		GCRTest(numType, d);
-		break;
 	case 11:
-		sumBits = flows / 100.0 * (keyLength + FindMS(numType) + 1) * basic;
-		GCRTest(numType, d);
+		sumBits = flows * atoi(argv[1]) * 4;
+		CRTest(numType, fingerLength, d);
 		break;
 	case 12:
 		sumBits = flows * atoi(argv[1]) * 4;
